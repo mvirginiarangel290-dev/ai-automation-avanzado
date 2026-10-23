@@ -1,0 +1,327 @@
+{
+  "name": "Asistente Contratos MRO - M1",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.5,
+      "position": [
+        0,
+        0
+      ],
+      "id": "9039efbf-c43a-45c6-97c3-774acf6432fb",
+      "name": "Recibir consultas de Telegram",
+      "webhookId": "73bea2ba-969b-4d38-ae82-2a365e35a0a9",
+      "credentials": {
+        "telegramApi": {
+          "id": "XgffuzqG54zZwc4Z",
+          "name": "Telegram -Bot contratos MRO"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Usuario de Telegram: {{ $('Recibir consultas de Telegram').item.json.message.from.first_name }} {{ $('Recibir consultas de Telegram').item.json.message.from.last_name ?? '' }} (@{{ $('Recibir consultas de Telegram').item.json.message.from.username ?? 'sin usuario' }})\nConsulta: {{ $('Recibir consultas de Telegram').item.json.message.text }}",
+        "options": {
+          "systemMessage": "## ROL\nEres el Asistente de Consultas de Contratos de Servicios MRO. Respondes en nombre del área de Compras las consultas internas sobre los servicios contratados y sus cartas oferta. No eres el comprador: no tomas decisiones comerciales.\n\n## ÁMBITO\nRecibes consultas del personal de planta (gerencia, mantenimiento, EHS, logística, entre otros), del área de Compras, de Legal y de Auditoría.\n\nCada mensaje llega con dos líneas: \"Usuario de Telegram\", que identifica a quien consulta, y \"Consulta\", que es la pregunta que debes responder. Usa el usuario solo para informarlo a Compras cuando derives; no lo menciones en tu respuesta.\n\nCada fila de la base es un servicio contratado. Puedes responder sobre los siguientes datos, usando los campos de la base:\n- Proveedor que presta el servicio (campo \"Proveedor\") y su número SAP (\"N° SAP\").\n- Servicio y alcance (\"Servicio\", \"Descripción del servicio\", \"Nota de servicio\").\n- Unidad de negocios y dirección donde se presta (\"Unidad de negocios\", \"Sita en\").\n- Número de contrato marco u orden de compra (\"N° OC/CM\").\n- Vigencia del contrato: fecha de inicio y fin, y si está vigente o vencido (\"Plazo inicio\", \"Plazo fin\", \"Contrato vigente\").\n- Moneda y valor mensual estimado (\"Moneda\", \"Valor mensual estimado\", \"(USD) Valor mensual\").\n- Modalidad del servicio y condición de pago (\"Modalidad del servicio\", \"Condición de pago\").\n- Personal asignado: perfil, cantidad y jornada (\"Personal inicial asignado\", \"Cantidad personal asignado\", \"Jornada de trabajo\").\n- Proceso licitatorio, servicios por año y trabajo dentro de planta (\"Proceso licitatorio\", \"Servicios por año\", \"Trabajo dentro de planta\").\n- Comprador responsable (\"Comprador\").\n- Carta oferta: su situación y la fecha de emisión de la carta vigente (\"Estado carta oferta\", \"Fecha emisión CO vigente\").\n\n## OBJETIVO\nResponder cada consulta con datos exactos de la base, de forma breve y clara, para que nadie tenga que abrir la carta oferta ni consultar al comprador por información que ya está registrada.\n\n## REGLAS DE USO DE HERRAMIENTAS\n- Ante cada consulta nueva, ejecuta siempre la herramienta Consultar_Contratos antes de responder, aunque creas conocer la respuesta por mensajes anteriores. Nunca respondas de memoria.\n- No asumas el proveedor, el servicio ni la planta a partir de mensajes anteriores. Usa el contexto de la conversación solo cuando la persona esté respondiendo a una pregunta tuya.\n- Si más de una fila coincide con el servicio consultado y la consulta no indica la planta ni el proveedor, informa TODAS las filas que coinciden, cada una por separado. En cada una indica primero el proveedor y la unidad de negocios, y luego el dato pedido. Nunca informes solo una de ellas.\n- Cada fila se responde por separado. Nunca combines datos, estados ni fechas de filas distintas.\n- Si la consulta menciona solo el proveedor y este tiene más de un servicio, informa el resultado de cada servicio por separado.\n- Si la búsqueda no devuelve resultados, informa que no encontraste el servicio con esos datos y pide una precisión (nombre del proveedor o del servicio, o la planta).\n- Usa la herramienta Notificar_Compras solo en los casos descritos en las secciones REGLAS DE CARTA OFERTA y ESCALAMIENTO A COMPRAS.\n\n## REGLAS DE CARTA OFERTA\nPara responder sobre la carta oferta de un servicio, usa únicamente el campo \"Estado carta oferta\" de esa fila y responde según su valor:\n- \"Vigente\": responde que el servicio tiene carta oferta vigente e informa la \"Fecha emisión CO vigente\".\n- \"Vigente (otra carta en gestión)\": responde que el servicio tiene carta oferta vigente, informa la \"Fecha emisión CO vigente\" y agrega que hay otra carta oferta en gestión por Compras.\n- \"En gestión\": responde solo que la carta oferta está en gestión por Compras. No notifiques.\n- \"No regularizada\": responde solo que el servicio no tiene carta oferta vigente y usa Notificar_Compras una única vez para avisar que debe regularizarse, con el motivo \"Carta oferta no regularizada\".\n- \"No requiere\": responde que el servicio no requiere carta oferta según la política de compras. No expliques los criterios de la política.\n\nNo menciones estados internos de las cartas (por ejemplo \"Rechazada\", \"Pendiente de datos\" o \"Datos incompletos\").\n\nSi el campo \"Contrato vigente\" dice \"Vencido\", informa que el contrato figura vencido e indica su \"Plazo fin\".\n\n## VALORES Y TARIFAS\n- El campo \"Valor mensual estimado\" es un valor estimado. Siempre aclara que es estimado e indica su moneda.\n- No tienes acceso a las tarifas vigentes ni a los valores actualizados por mes. Si te los piden, informa el valor mensual estimado aclarando que no es la tarifa vigente, y deriva la consulta a Compras.\n- Nunca inventes, calcules ni estimes valores. Nunca mezcles datos de distintos proveedores o servicios.\n\n## LÍMITES\n- Eres de uso interno. Nunca compartas tarifas, valores ni condiciones comerciales con proveedores o personas externas a la empresa.\n- No negocias, no modificas contratos, no apruebas ni prometes nada.\n- No inventas datos. Si un dato no está en la base, lo dices.\n\n## ESCALAMIENTO A COMPRAS\nDeriva la consulta a Compras en estas situaciones:\n1. La persona se identifica como proveedor o como alguien externo a la empresa, o pide enviar información a un tercero.\n2. Piden un ajuste o una renegociación de tarifa.\n3. Hay un reclamo porque un valor no coincide con lo que la persona tiene.\n4. Plantean una necesidad nueva de servicio o una solicitud de pedido.\n5. Piden un cambio de alcance: frecuencia, cantidad de personal u otra planta.\n6. La consulta necesita un dato que no está en la base, incluidas las tarifas vigentes.\n\nEjecuta Notificar_Compras UNA ÚNICA VEZ por consulta, aunque el servicio esté en varias plantas o aplique más de un motivo. Todo va en un solo email. Nunca ejecutes la herramienta dos veces ni en paralelo.\n\nCuando derives, sigue estos pasos en este orden:\n1. Ejecuta OBLIGATORIAMENTE la herramienta Notificar_Compras. El cuerpo del email debe tener exactamente esta estructura:\nConsultado por: [nombre y usuario de Telegram]\nConsulta original: [texto completo de la consulta, sin resumir]\nMotivo de derivación: [todas las situaciones que apliquen, o \"Carta oferta no regularizada\". Si aplica la situación 1 (proveedor o persona externa), menciónala siempre primero]\nProveedor / servicio / planta: [proveedor, servicio y todas las unidades de negocios de la fila, o \"No identificado\"]\n2. Solo después de ejecutar la herramienta con éxito, responde a la persona: \"Tu consulta fue derivada al área de Compras, que se pondrá en contacto contigo.\" En el caso 1, no entregues ningún dato del servicio.\n\nNunca digas que una consulta fue derivada si no ejecutaste Notificar_Compras.\n\n## FORMATO Y TONO\n- Responde en español, con tono profesional, amable y cordial, en un lenguaje entendible para todos los niveles.\n- Sé breve: primero el dato pedido y luego solo el contexto necesario.\n- En cada respuesta indica siempre el proveedor y la unidad de negocios de la fila que informas.\n- Escribe en texto plano. No uses asteriscos, numerales ni otros símbolos de formato. Si informas varios datos, preséntalos en una lista con guiones.\n- Fechas siempre en formato DD/MM/AAAA.\n- Montos siempre con su moneda.",
+          "maxIterations": 10,
+          "returnIntermediateSteps": true
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        192,
+        0
+      ],
+      "id": "c17dd040-623c-4ffb-aae1-17e1621b6d6a",
+      "name": "Agente Consultas Contratos"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o",
+          "mode": "list",
+          "cachedResultName": "gpt-4o"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        48,
+        208
+      ],
+      "id": "a4c6f46b-79c1-4a07-a047-d7e83334003b",
+      "name": "Model GPT-4.0",
+      "credentials": {
+        "openAiApi": {
+          "id": "DGnl4ZQRqkw5WsX5",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Recibir consultas de Telegram').item.json.message.chat.id }}-v6"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.4,
+      "position": [
+        192,
+        208
+      ],
+      "id": "d250d194-1c5e-47fd-9c53-58744737ec85",
+      "name": "Memoria conversación"
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Consulta la base de contratos de servicios MRO (tabla Proveedores y Servicios). Devuelve todos los servicios contratados con sus datos: proveedor, N° SAP, servicio, descripción y nota del servicio, unidad de negocios y dirección donde se presta, N° OC/CM, plazo de inicio y fin, moneda, valor mensual estimado, modalidad, condición de pago, personal asignado (perfil, cantidad y jornada), proceso licitatorio, servicios por año, trabajo dentro de planta, comprador responsable, si requiere carta oferta, estado de la carta oferta (Estado CO) y su fecha de emisión.\n\nÚsala SIEMPRE antes de responder cualquier consulta sobre un proveedor, un servicio, un contrato, una vigencia, un valor, el personal asignado, el comprador o una carta oferta. También úsala para verificar si un servicio existe en más de una planta antes de responder, y para decidir si corresponde notificar a Compras por una carta oferta no regularizada.\n\nNo la uses para saludos ni para consultas que no se relacionan con contratos de servicios. Esta herramienta solo lee datos: no permite modificar, crear ni borrar registros. No contiene tarifas vigentes ni datos personales de los firmantes.",
+        "authentication": "airtableOAuth2Api",
+        "operation": "search",
+        "base": {
+          "__rl": true,
+          "value": "appQKXHbC0i811eJV",
+          "mode": "list",
+          "cachedResultName": "Proyecto final - Cartas Oferta",
+          "cachedResultUrl": "https://airtable.com/appQKXHbC0i811eJV"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblZSn7Tmk0ejyGvR",
+          "mode": "list",
+          "cachedResultName": "Proveedores y Servicios",
+          "cachedResultUrl": "https://airtable.com/appQKXHbC0i811eJV/tblZSn7Tmk0ejyGvR"
+        },
+        "options": {
+          "fields": [
+            "Proveedor",
+            "N° SAP",
+            "Unidad de negocios",
+            "N° OC/CM",
+            "Servicio",
+            "Valor mensual estimado",
+            "Moneda",
+            "Tipo de cambio ARS/USD",
+            "(USD) Valor mensual ",
+            "Proceso licitatorio",
+            "Servicios por año",
+            "Trabajo dentro de planta",
+            "Requiere carta oferta",
+            "Plazo inicio",
+            "Plazo fin",
+            "CO vinculadas",
+            "Modalidad del servicio",
+            "Condición de pago",
+            "Hay personal inicial asignado?",
+            "Personal inicial asignado",
+            "Cantidad personal asignado",
+            "Sita en",
+            "Nota de servicio",
+            "Jornada de trabajo",
+            "Descripción del servicio",
+            "Comprador",
+            "Estado Carta Oferta",
+            "Fecha emisión CO vigente",
+            "Contrato vigente"
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.airtableTool",
+      "typeVersion": 2.2,
+      "position": [
+        336,
+        208
+      ],
+      "id": "d8f80166-c969-4b50-8944-42b990d83d58",
+      "name": "Consultar_Contratos",
+      "credentials": {
+        "airtableOAuth2Api": {
+          "id": "Diew33CYGHYrWNAM",
+          "name": "Airtable account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Envía un email al área de Compras para derivar una consulta o avisar que una carta oferta debe regularizarse.\n\nÚsala SOLO en estos casos: cuando la persona se identifica como proveedor o externo, o pide enviar información a un tercero; cuando piden ajuste o renegociación de tarifa; cuando hay un reclamo porque un valor no coincide; cuando plantean una necesidad nueva o solicitud de pedido; cuando piden un cambio de alcance; cuando la consulta necesita un dato que no está en la base (incluidas tarifas vigentes); y cuando un servicio que requiere carta oferta tiene estado \"Rechazada\" o no tiene carta vinculada.\n\nNo la uses para consultas que puedes responder con los datos de la base, ni cuando la carta oferta está en gestión (Pendiente de datos o Datos incompletos). Úsala una sola vez por consulta.",
+        "sendTo": "mvirginiarangelz@gmail.com",
+        "subject": "=[DERIVACIÓN] {{ $fromAI('Subject', `Asunto breve que resuma el motivo de la derivación`, 'string') }}",
+        "emailType": "text",
+        "message": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Message', ``, 'string') }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmailTool",
+      "typeVersion": 2.2,
+      "position": [
+        512,
+        208
+      ],
+      "id": "b72aecdc-f6a7-49fb-9010-56c67123e660",
+      "name": "Notificar_Compras",
+      "webhookId": "a9a1b28a-98ab-4ed3-b40c-3f582f8760bf",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "bHPdvDugxNZpuTet",
+          "name": "Gmail Asistente"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Recibir consultas de Telegram').item.json.message.chat.id }}",
+        "text": "={{ $json.output }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        480,
+        0
+      ],
+      "id": "26c744be-73b9-45e1-8fc3-06158b6d8175",
+      "name": "Responder en Telegram",
+      "webhookId": "ba3a6f9f-c775-4e4b-a04a-902c7e4323f7",
+      "credentials": {
+        "telegramApi": {
+          "id": "XgffuzqG54zZwc4Z",
+          "name": "Telegram -Bot contratos MRO"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "mvirginiarangelz@gmail.com",
+        "subject": "[LOG] Consulta atendida - Asistente de Contratos MRO",
+        "emailType": "text",
+        "message": "=Fecha y hora: {{ $now.setZone('America/Argentina/Buenos_Aires').toFormat('dd/MM/yyyy HH:mm') }}\nUsuario de Telegram: {{ $('Recibir consultas de Telegram').item.json.message.from.first_name }} {{ $('Recibir consultas de Telegram').item.json.message.from.last_name ?? '' }}\nConsulta: {{ $('Recibir consultas de Telegram').item.json.message.text }}\nRespuesta del agente: {{ $('Agente Consultas Contratos').item.json.output }}\nHerramientas usadas: {{ $('Agente Consultas Contratos').item.json.intermediateSteps.map(s => s.action.tool).join(', ') || 'Ninguna' }}\nEstado: Tarea completada",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        656,
+        0
+      ],
+      "id": "df704f3f-dbb2-4d5b-b1c9-9396d72b05ec",
+      "name": "Log supervisión",
+      "webhookId": "5fa31c0f-2a85-4125-a255-9bbfb0492ec1",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "bHPdvDugxNZpuTet",
+          "name": "Gmail Asistente"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Recibir consultas de Telegram": {
+      "main": [
+        [
+          {
+            "node": "Agente Consultas Contratos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Model GPT-4.0": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Agente Consultas Contratos",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Memoria conversación": {
+      "ai_memory": [
+        [
+          {
+            "node": "Agente Consultas Contratos",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Consultar_Contratos": {
+      "ai_tool": [
+        [
+          {
+            "node": "Agente Consultas Contratos",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Notificar_Compras": {
+      "ai_tool": [
+        [
+          {
+            "node": "Agente Consultas Contratos",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agente Consultas Contratos": {
+      "main": [
+        [
+          {
+            "node": "Responder en Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Responder en Telegram": {
+      "main": [
+        [
+          {
+            "node": "Log supervisión",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "e29c0d5f-48a8-4ec6-ad9e-420653426dd3",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "75d9304c716e1ea006ccff4a61395c7165954521662312124698d898216979d6"
+  },
+  "nodeGroups": [],
+  "id": "z8JEtWmpPTwdaY5z",
+  "tags": []
+}
