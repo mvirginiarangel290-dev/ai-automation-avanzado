@@ -9,3 +9,4 @@ Repositorio con las entregas del curso AI Automation Avanzado. El proyecto integ
 | Entrega | Contenido | Carpeta |
 |---|---|---|
 | Pre-entrega 1 | Agente autónomo básico funcional | [pre-entrega-1](pre-entrega-1/) |
+| Pre-entrega 2 | Orquestación multi-agente Manager-Worker | [pre-entrega-2](pre-entrega-2/) |
