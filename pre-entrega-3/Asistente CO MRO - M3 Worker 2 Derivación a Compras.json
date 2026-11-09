@@ -1,0 +1,180 @@
+{
+  "name": "Asistente CO MRO - M3 Worker 2 Derivación a Compras",
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "consultado_por"
+            },
+            {
+              "name": "consulta"
+            },
+            {
+              "name": "motivo"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        0
+      ],
+      "id": "717b5172-0454-43c1-b05b-55e3e991b2e7",
+      "name": "Recibir derivación del Manager"
+    },
+    {
+      "parameters": {
+        "sendTo": "mvirginiarangelz@gmail.com",
+        "subject": "=[DERIVACIÓN] {{ $json.motivo.slice(0, 80) }}",
+        "emailType": "text",
+        "message": "=Consultado por: {{ $json.consultado_por }}\nConsulta original: {{ $json.consulta }}\nMotivo de derivación: {{ $json.motivo }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        176,
+        0
+      ],
+      "id": "988db59b-78f8-4e4b-9f3b-de3e46f5e077",
+      "name": "Enviar email a Compras",
+      "webhookId": "351cc2f6-be6a-4036-8e0f-1ef7ae0753ab",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "bHPdvDugxNZpuTet",
+          "name": "Gmail Asistente"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "636939f1-70e8-42e0-8c7a-e0d610fbfc2f",
+              "name": "status",
+              "value": "success",
+              "type": "string"
+            },
+            {
+              "id": "b1b51e7c-4180-440b-a50a-8448f4b46845",
+              "name": "respuesta",
+              "value": "Tu consulta fue derivada al área de Compras, que se pondrá en contacto contigo.",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        400,
+        -96
+      ],
+      "id": "a907c701-4217-4d26-9465-07108daf8f78",
+      "name": "Salida OK"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "7bab28c7-587e-4bbe-9815-d41780641d48",
+              "name": "status",
+              "value": "error",
+              "type": "string"
+            },
+            {
+              "id": "28402545-b262-4095-beb6-b052b44b316a",
+              "name": "=message",
+              "value": "={{ $json.error?.message ?? $json.error ?? 'Error desconocido en Worker 2' }}",
+              "type": "string"
+            },
+            {
+              "id": "2f78f409-efe2-40e6-aace-1c3520c3dd7b",
+              "name": "worker",
+              "value": "Worker 2 Derivación",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        400,
+        96
+      ],
+      "id": "90f726e5-42d7-49f0-af25-a80fa0cecb6b",
+      "name": "Salida Error"
+    }
+  ],
+  "pinData": {
+    "Recibir derivación del Manager": [
+      {
+        "json": {
+          "consultado_por": "Virginia (@sin usuario)",
+          "consulta": "Necesitamos sumar un oficial más al servicio de mantenimiento mecánico de BELTEC",
+          "motivo": "Cambio de alcance: sumar personal al servicio de mantenimiento mecánico de BELTEC para Isover y Weber Bosques."
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Recibir derivación del Manager": {
+      "main": [
+        [
+          {
+            "node": "Enviar email a Compras",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enviar email a Compras": {
+      "main": [
+        [
+          {
+            "node": "Salida OK",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Salida Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner",
+    "executionTimeout": 60,
+    "availableInMCP": false
+  },
+  "versionId": "bddaccc1-4f72-46fa-b0dd-750b7c56a777",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "75d9304c716e1ea006ccff4a61395c7165954521662312124698d898216979d6"
+  },
+  "nodeGroups": [],
+  "id": "RhqL2RfJXe5GahtZ",
+  "tags": []
+}
