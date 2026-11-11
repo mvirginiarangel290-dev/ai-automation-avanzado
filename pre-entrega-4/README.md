@@ -1,9 +1,9 @@
 # Pre-entrega 4: Integraciones avanzadas e interconexión de sistemas
 
-**Proyecto:** Asistente de Consultas de Cartas Oferta MRO
-**Autora:** Virginia Rangel
-**Curso:** AI Automation Avanzado - Módulo 4
-**Archivo:** `checkpoint4_virginia_rangel.json` (workflow *Asistente CO MRO - M4 Manager*)
+- **Proyecto:** Asistente de Consultas de Cartas Oferta MRO
+- **Autora:** Virginia Rangel
+- **Curso:** AI Automation Avanzado - Módulo 4
+- **Archivo:** `checkpoint4_virginia_rangel.json` (workflow *Asistente CO MRO - M4 Manager*)
 
 ## Descripción
 
